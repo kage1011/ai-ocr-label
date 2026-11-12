@@ -1,0 +1,75 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "AI Garment Multi-Label Size Inspection Flow",
+    "subtitle": "Real-time edge inspection pipeline under 200ms latency budget",
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "quality_profile": "standard",
+    "output": "docs/diagrams/inspection_flow.html"
+  },
+  "lanes": [
+    { "id": "camera_hw", "label": "Hardware & Sensing" },
+    { "id": "vision_core", "label": "YOLO Detection & Alignment" },
+    { "id": "ocr_engine", "label": "OCR Text Recognition" },
+    { "id": "vector_kb", "label": "Vector Embedding & KB" },
+    { "id": "judge_alarm", "label": "Consistency Judge & Verdict" },
+    { "id": "client_ui", "label": "Desktop UI & Supervision" }
+  ],
+  "phases": [
+    { "id": "capture", "label": "Capture", "fromCol": 0, "toCol": 0 },
+    { "id": "localize", "label": "Detect & Align", "fromCol": 1, "toCol": 2, "variant": "emphasis" },
+    { "id": "inference", "label": "OCR & Embedding Match", "fromCol": 3, "toCol": 3 },
+    { "id": "decision", "label": "Consistency Judgment", "fromCol": 4, "toCol": 4, "variant": "emphasis" },
+    { "id": "verdict", "label": "Alarm & UI Dispatch", "fromCol": 5, "toCol": 5 }
+  ],
+  "groups": [
+    { "id": "analysis_group", "label": "Parallel Feature Analysis", "lane": "ocr_engine", "fromCol": 3, "toCol": 3, "variant": "dashed" },
+    { "id": "alarm_group", "label": "Instant Feedback Loop (<200ms)", "lane": "judge_alarm", "fromCol": 4, "toCol": 5, "variant": "emphasis" }
+  ],
+  "mainPath": ["garment_trigger", "yolo_det", "homography", "paddle_ocr", "consist_judge", "pass_action"],
+  "nodes": [
+    { "id": "garment_trigger", "lane": "camera_hw", "col": 0, "type": "external", "label": "Camera Capture", "sublabel": "Industrial GigE / USB 1080p", "width": 132 },
+    { "id": "yolo_det", "lane": "vision_core", "col": 1, "type": "backend", "label": "YOLO Detector", "sublabel": "Detect label bounding boxes", "tag": "Conf >= 0.65", "width": 132 },
+    { "id": "homography", "lane": "vision_core", "col": 2, "type": "backend", "label": "Homography Aligner", "sublabel": "Perspective correction", "tag": "Normalized crop", "width": 132 },
+    { "id": "paddle_ocr", "lane": "ocr_engine", "col": 3, "type": "backend", "label": "PaddleOCR Engine", "sublabel": "Extract size text (S/M/L)", "tag": "GPU TensorRT/det+rec", "width": 132 },
+    { "id": "faiss_match", "lane": "vector_kb", "col": 3, "type": "database", "label": "FAISS & SQLite KB", "sublabel": "MobileNetV3 vector match", "tag": "Golden templates", "width": 132 },
+    { "id": "consist_judge", "lane": "judge_alarm", "col": 4, "type": "security", "label": "Consistency Judge", "sublabel": "Cross-check label sizes", "tag": "PASS / NG rules", "width": 132 },
+    { "id": "teach_ui", "lane": "client_ui", "col": 4, "type": "frontend", "label": "Teaching Mode UI", "sublabel": "Supervisor label cataloging", "tag": "Few-shot vector add", "width": 132 },
+    { "id": "pass_action", "lane": "judge_alarm", "col": 5, "type": "security", "label": "PASS Verdict", "sublabel": "1 short beep (1000Hz)", "tag": "Green status", "width": 132 },
+    { "id": "fail_alarm", "lane": "camera_hw", "col": 5, "type": "security", "label": "Hardware Alarm", "sublabel": "Serial / Tower light / Beep", "tag": "Mismatch / Missing", "width": 132 },
+    { "id": "desktop_ui", "lane": "client_ui", "col": 5, "type": "frontend", "label": "PyQt6 Desktop HUD", "sublabel": "Full-screen line worker UI", "tag": "Real-time overlay", "width": 132 }
+  ],
+  "edges": [
+    { "id": "e_trigger_yolo", "from": "garment_trigger", "to": "yolo_det", "label": "raw frame", "variant": "emphasis" },
+    { "id": "e_yolo_align", "from": "yolo_det", "to": "homography", "label": "label crops", "variant": "default" },
+    { "id": "e_align_ocr", "from": "homography", "to": "paddle_ocr", "label": "aligned crops", "variant": "default" },
+    { "id": "e_align_faiss", "from": "homography", "to": "faiss_match", "label": "embedding", "variant": "dashed" },
+    { "id": "e_ocr_judge", "from": "paddle_ocr", "to": "consist_judge", "label": "parsed sizes", "variant": "emphasis" },
+    { "id": "e_faiss_judge", "from": "faiss_match", "to": "consist_judge", "label": "template match", "variant": "default" },
+    { "id": "e_faiss_teach", "from": "faiss_match", "to": "teach_ui", "label": "needs teaching", "variant": "dashed", "role": "branch" },
+    { "id": "e_judge_pass", "from": "consist_judge", "to": "pass_action", "label": "Match OK", "variant": "emphasis" },
+    { "id": "e_judge_fail", "from": "consist_judge", "to": "fail_alarm", "label": "Mismatch / Missing", "variant": "security", "role": "error" },
+    { "id": "e_judge_ui", "from": "consist_judge", "to": "desktop_ui", "label": "render result", "variant": "default" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Pass / Fail Criteria",
+      "items": [
+        "All required labels present: Care label, Size label, Hang tag",
+        "Sizes extracted across labels must strictly match (e.g., L == L == L)",
+        "Latency budget: <= 200 ms total turnaround"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Teaching Mode (Few-Shot)",
+      "items": [
+        "When similarity < 0.82, flagged as needs_teaching",
+        "Supervisor registers new label in FAISS + SQLite without retraining YOLO"
+      ]
+    }
+  ]
+}

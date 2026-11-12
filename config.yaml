@@ -1,0 +1,49 @@
+camera:
+  resolution: [1920, 1080]
+  fps: 30
+  trigger_mode: manual   # manual | sensor | continuous
+  device_index: 0
+  exposure: auto
+
+models:
+  label_detector:
+    weights: models/label_detector/weights/best.pt
+    conf_threshold: 0.5
+    iou_threshold: 0.45
+    img_size: 640
+    device: cuda  # cuda | cpu
+  feature_extractor:
+    model_path: models/feature_extractor/mobilenetv3_embedder.onnx
+    embedding_dim: 512
+    similarity_threshold: 0.85
+  ocr:
+    engine: paddleocr   # paddleocr | easyocr
+    lang: en
+    use_gpu: true
+    padding_px: 10
+
+inspection:
+  required_label_types:
+    - size_label
+    - care_label
+    - hang_tag
+  latency_budget_ms: 200
+  confidence_threshold: 0.90
+
+alarm:
+  enabled: true
+  pass_beep_ms: 100
+  ng_alarm_ms: 2000
+  serial_port: null   # COM3 or null for winsound fallback
+  baud_rate: 9600
+
+database:
+  path: data/knowledge_base.db
+  faiss_index_path: data/faiss_index.bin
+  reference_images_dir: data/reference_images
+
+logging:
+  level: INFO
+  save_snapshots: true
+  snapshot_dir: data/snapshots
+  max_snapshot_days: 30

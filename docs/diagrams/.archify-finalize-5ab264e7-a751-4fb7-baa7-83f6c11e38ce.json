@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "running",
+  "type": "workflow",
+  "quality": "showcase",
+  "startedAt": "2026-11-12T07:38:48.217Z",
+  "specification": {
+    "path": "D:\\11.source\\NEW GIT\\ai-ocr-label\\docs\\diagrams\\inspection_flow.workflow.json",
+    "sha256": "fd979a02d7c0c039ccc2e43284407946e773a18ab87e030f6ccd639d4022eeb9",
+    "bytes": 5368
+  },
+  "artifact": {
+    "path": "D:\\11.source\\NEW GIT\\ai-ocr-label\\docs\\diagrams\\inspection_flow.html"
+  },
+  "stages": {},
+  "browserCheck": {
+    "requested": true,
+    "ran": false
+  },
+  "diagnostics": [],
+  "evidence": {
+    "receipt": "D:\\11.source\\NEW GIT\\ai-ocr-label\\docs\\diagrams\\inspection_flow.finalize.json",
+    "summaryReceipt": "D:\\11.source\\NEW GIT\\ai-ocr-label\\docs\\diagrams\\inspection_flow.finalize-summary.json"
+  },
+  "visualReview": "not-requested"
+}
